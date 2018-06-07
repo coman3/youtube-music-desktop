@@ -1,6 +1,7 @@
 import * as Electron from "electron";
 import { SUPPORTED_KEYBINDING } from "../../Models/Config/KeybindingConfigItem";
 import IWindow from "../IWindow";
+import InjectResolver from "./Actions/InjectResolver";
 import KeyBinder from "./KeyBinder";
 export default class MainWindow extends Electron.BrowserWindow implements IWindow{
     private isDebugMode: boolean;
@@ -19,7 +20,9 @@ export default class MainWindow extends Electron.BrowserWindow implements IWindo
             width: primaryDisplay.bounds.width * 0.55, 
             show: false,
             webPreferences: {
-                nodeIntegration: false,
+                // DO NOT allow website to execute node commands
+                // this can be fatal to any computer, even though it is coming from a trusted source (IE, Google)
+                nodeIntegration: false, 
             },
         });
         this.isDebugMode = true;
@@ -34,8 +37,8 @@ export default class MainWindow extends Electron.BrowserWindow implements IWindo
         this.keyBinder = new KeyBinder(Electron.globalShortcut);
         await this.keyBinder.loadConfig();
         this.keyBinder.KeyBinds[SUPPORTED_KEYBINDING.playPause].on(() => {
-            console.log("test Play");
-            this.webContents.executeJavaScript("document.getElementsByClassName(\"play-pause-button\")[0].click()");
+
+            
         });
 
         await this.keyBinder.bind();
@@ -55,7 +58,13 @@ export default class MainWindow extends Electron.BrowserWindow implements IWindo
      * Emitted when the web page has been rendered (while not being shown) and window
      * can be displayed without a visual flash.
      */
-    private onceReadyToShow(showOnLoaded: boolean, bindToKeys: boolean): void {
+    private async onceReadyToShow(showOnLoaded: boolean, bindToKeys: boolean): Promise<void> {
+
+        // Firstly, Inject interface javascript. 
+        this.webContents.executeJavaScript(await InjectResolver());
+        this.webContents.executeJavaScript("initInjection()");
+
+        console.log("Injected Interface");
         if (this.isDebugMode){
             this.webContents.openDevTools({
                 mode: "undocked",
@@ -66,6 +75,7 @@ export default class MainWindow extends Electron.BrowserWindow implements IWindo
         if (bindToKeys) {
             this.bindToKeys();
         }
+        this.bindToRenderThreadEvents();
     }   
 
     /**
@@ -79,6 +89,10 @@ export default class MainWindow extends Electron.BrowserWindow implements IWindo
             For Example:    On request of https://music.youtube.com/youtubei/v1/next) 
                             update media info in operating system 
         */
+
+       Electron.ipcMain.on("launch-test", (event: Electron.Event, arg: any) => {
+            console.log(event, arg);
+       });
     }
 
 }
