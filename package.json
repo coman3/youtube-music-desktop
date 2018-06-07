@@ -1,21 +1,21 @@
 {
-  "name": "electron-quick-start-typescript",
-  "version": "1.0.0",
-  "description": "A minimal Electron application written with Typescript",
+  "name": "youtube-music-desktop",
+  "version": "0.0.1",
+  "description": "A minimal cross platform unofficial Youtube music desktop application.",
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
     "lint": "tslint -c tslint.json -p tsconfig.json",
     "start": "npm run build && electron ./dist/index.js"
   },
-  "repository": "https://github.com/electron/electron-quick-start-typescript",
+  "repository": "https://github.com/coman3/youtube-music-desktop",
   "keywords": [
-    "Electron",
-    "quick",
-    "start",
-    "tutorial",
-    "demo",
-    "typescript"
+    "youtube",
+    "music",
+    "desktop",
+    "election",
+    "media",
+    "control"
   ],
   "author": "GitHub",
   "license": "CC0-1.0",
