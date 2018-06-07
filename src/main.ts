@@ -1,5 +1,6 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, globalShortcut, Menu, Tray } from "electron";
 import * as path from "path";
+const debug = true;
 
 let mainWindow: Electron.BrowserWindow;
 
@@ -7,21 +8,41 @@ function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     height: 600,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+    },
     width: 800,
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, "../index.html"));
+  mainWindow.loadURL("https://music.youtube.com/");
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  if (debug) {
+    require("devtron").install();
+    mainWindow.webContents.openDevTools({ mode: "undocked"});
+  }
 
   // Emitted when the window is closed.
-  mainWindow.on("closed", () => {
+  mainWindow.on("close", (event) => {
+    console.log(event);
+    //event.preventDefault();
+    mainWindow.hide();
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
-    mainWindow = null;
+    // mainWindow = null;
+  });
+
+  mainWindow.once("ready-to-show", () => {
+    console.log("Registering...");
+    mainWindow.show();
+    const status = globalShortcut.register("MediaPlayPause", () => {
+      console.log("Whoop!");
+      mainWindow.webContents.executeJavaScript('document.getElementsByClassName("play-pause-button")[0].click()');
+    });
+    console.log(status);
   });
 }
 
