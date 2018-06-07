@@ -4,7 +4,7 @@ import { SUPPORTED_KEYBINDING, SUPPORTED_KEYBINDINGS } from "../../Models/Config
 import Event from "../../Models/Event";
 
 export default class KeyBinder {
-    private keyBinds: IKeyBindingDictionary<Event<void>> = {
+    public KeyBinds: IKeyBindingDictionary<Event<void>> = {
         playPause: new Event<void>(),
         nextTrack: new Event<void>(),
         prevTrack: new Event<void>(),
@@ -17,31 +17,36 @@ export default class KeyBinder {
 
     constructor(globalShortcut: Electron.GlobalShortcut){
         this.globalShortcut = globalShortcut;
-        this.create();
-    }
-    private async create(): Promise<void> {
-        try {
-            await this.loadConfig();
-            await this.bind();
-        } catch (error) {
-            console.log("error binding keys");
-            // TODO: Present warning to user;
-        }
     }
 
-    private async loadConfig(): Promise<void> {
-        this.config = await KeybindingConfigItem.load();
+    public async loadConfig(config: KeybindingConfigItem = null): Promise<void> {
+        if (config == null)
+            this.config = await KeybindingConfigItem.load();
+        else 
+            this.config = config;
     }
 
-    private async bind(): Promise<void> {
+    public async bind(): Promise<void> {
+        if (this.config == null) 
+            throw Error("Config not loaded.");
         for (const binding of SUPPORTED_KEYBINDINGS) {
-            this.globalShortcut.register(this.config.Bindings[binding], () => this.keyBinds[binding].trigger());
+            this.globalShortcut.register(this.config.Bindings[binding], () => this.KeyBinds[binding].trigger());
         }
     }
 
+    /**
+     * Unbind all key commands
+     */
+    public async unbind(): Promise<void> {
+        this.globalShortcut.unregisterAll();
+    }
 
+    /**
+     * Save Keybinding Config
+     */
+    public async saveConfig(): Promise<void> {
+        await this.config.save();
+    }
     
-
-
 }
 

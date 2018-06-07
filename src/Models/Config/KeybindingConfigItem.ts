@@ -55,9 +55,18 @@ export default class KeybindingConfigItem extends ConfigItem {
      */
     public static async load(setDefault: boolean = true): Promise<KeybindingConfigItem> {
        return new Promise<KeybindingConfigItem>((resolver, rejector) => {
-            Storage.get(CONFIG_KEYBINDINGS, (error, data) => {
-                if (error != null)
+            Storage.get(CONFIG_KEYBINDINGS, (error: Error, data: any) => {
+                if (error != null){
                     return rejector(error);
+                }
+
+                if (setDefault === true && data.lastUpdated === undefined) 
+                    // set default is set to true, and the response was empty (had no last updated field)
+                {
+                    const defaultData = new KeybindingConfigItem();
+                    return resolver(defaultData); 
+                }
+
                 /*  
                     Cast data into a KeybindingConfigItem type, 
                     then construct it as new so that we can save and update it.
@@ -111,11 +120,12 @@ export default class KeybindingConfigItem extends ConfigItem {
      */
     public async save(): Promise<void> {
         return new Promise<void>((resolver, rejector) => {
-             Storage.set(CONFIG_KEYBINDINGS, this, (error) => {
-                 if (error != null)
-                     return rejector(error);
-                 return resolver();
-             });
+            this.lastUpdated = new Date();
+            Storage.set(CONFIG_KEYBINDINGS, this, (error) => {
+                if (error != null)
+                    return rejector(error);
+                return resolver();
+            });
          });
      }
 
